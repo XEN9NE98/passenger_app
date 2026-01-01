@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:passenger_app/phone_login_page.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,7 +12,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _userName = 'Passenger';
-  GoogleMapController? _mapController;
   String? _selectedOrigin;
   String? _selectedDestination;
   int _passengerCount = 1;
@@ -27,18 +25,10 @@ class _HomeScreenState extends State<HomeScreen> {
     {'name': 'Jetty 5 - Portuguese Settlement', 'lat': 2.1845, 'lng': 102.2589},
   ];
 
-  final CameraPosition _initialPosition = const CameraPosition(
-    target: LatLng(2.1896, 102.2501), // Melaka center
-    zoom: 13.5,
-  );
-
-  Set<Marker> _markers = {};
-
   @override
   void initState() {
     super.initState();
     _loadUserData();
-    _createMarkers();
   }
 
   Future<void> _loadUserData() async {
@@ -55,21 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     }
-  }
-
-  void _createMarkers() {
-    _markers = _locations.map((location) {
-      return Marker(
-        markerId: MarkerId(location['name']),
-        position: LatLng(location['lat'], location['lng']),
-        infoWindow: InfoWindow(title: location['name']),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-      );
-    }).toSet();
-  }
-
-  void _onMapCreated(GoogleMapController controller) {
-    _mapController = controller;
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -211,15 +186,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       onChanged: (value) {
                         setState(() {
                           _selectedOrigin = value;
-                          // Move camera to selected location
-                          if (value != null) {
-                            final location = _locations.firstWhere((loc) => loc['name'] == value);
-                            _mapController?.animateCamera(
-                              CameraUpdate.newLatLng(
-                                LatLng(location['lat'], location['lng']),
-                              ),
-                            );
-                          }
                         });
                       },
                     ),
@@ -268,15 +234,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       onChanged: (value) {
                         setState(() {
                           _selectedDestination = value;
-                          // Move camera to selected location
-                          if (value != null) {
-                            final location = _locations.firstWhere((loc) => loc['name'] == value);
-                            _mapController?.animateCamera(
-                              CameraUpdate.newLatLng(
-                                LatLng(location['lat'], location['lng']),
-                              ),
-                            );
-                          }
                         });
                       },
                     ),
@@ -369,52 +326,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-
-            // Map Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Available Jetties",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1A1A1A),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 300,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFDDE5F0), width: 1.5),
-                    ),
-                    clipBehavior: Clip.hardEdge,
-                    child: GoogleMap(
-                      onMapCreated: _onMapCreated,
-                      initialCameraPosition: _initialPosition,
-                      markers: _markers,
-                      myLocationButtonEnabled: true,
-                      myLocationEnabled: true,
-                      zoomControlsEnabled: true,
-                      mapType: MapType.normal,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
           ],
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
   }
 }
