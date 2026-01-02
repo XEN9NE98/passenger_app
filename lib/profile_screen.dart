@@ -83,6 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _isEditing = false;
           });
 
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Profile updated successfully'),
@@ -92,9 +93,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = e.message ?? 'An error occurred';
       });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(_errorMessage),
@@ -102,9 +105,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'An error occurred while saving profile';
       });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(_errorMessage),
@@ -172,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 end: Alignment.bottomRight,
                 colors: [
                   const Color(0xFF0066CC),
-                  const Color(0xFF0066CC).withOpacity(0.8),
+                  const Color(0xFF0066CC).withValues(alpha: 0.8),
                 ],
               ),
             ),

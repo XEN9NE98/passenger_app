@@ -94,8 +94,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      const Color(0xFF0066CC).withOpacity(0.1),
-                      const Color(0xFF0066CC).withOpacity(0.05),
+                      const Color(0xFF0066CC).withValues(alpha: 0.1),
+                      const Color(0xFF0066CC).withValues(alpha: 0.05),
                     ],
                   ),
                 ),
@@ -134,10 +134,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0066CC).withOpacity(0.05),
+                  color: const Color(0xFF0066CC).withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: const Color(0xFF0066CC).withOpacity(0.2),
+                    color: const Color(0xFF0066CC).withValues(alpha: 0.2),
                   ),
                 ),
                 child: Row(

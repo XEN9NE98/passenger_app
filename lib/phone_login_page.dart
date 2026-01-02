@@ -105,8 +105,8 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      const Color(0xFF0066CC).withOpacity(0.1),
-                      const Color(0xFF0066CC).withOpacity(0.05),
+                      const Color(0xFF0066CC).withValues(alpha: 0.1),
+                      const Color(0xFF0066CC).withValues(alpha: 0.05),
                     ],
                   ),
                 ),
@@ -218,7 +218,7 @@ class _PhoneLoginPageState extends State<PhoneLoginPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0066CC).withOpacity(0.05),
+                  color: const Color(0xFF0066CC).withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -410,8 +410,8 @@ class _OTPScreenState extends State<OTPScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      const Color(0xFF0066CC).withOpacity(0.1),
-                      const Color(0xFF0066CC).withOpacity(0.05),
+                      const Color(0xFF0066CC).withValues(alpha: 0.1),
+                      const Color(0xFF0066CC).withValues(alpha: 0.05),
                     ],
                   ),
                 ),
@@ -493,7 +493,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0066CC).withOpacity(0.05),
+                    color: const Color(0xFF0066CC).withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

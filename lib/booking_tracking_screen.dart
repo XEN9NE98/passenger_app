@@ -40,7 +40,7 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
                 Icon(
                   Icons.map,
                   size: 48,
-                  color: const Color(0xFF0066CC).withOpacity(0.5),
+                  color: const Color(0xFF0066CC).withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -48,7 +48,7 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0066CC).withOpacity(0.7),
+                    color: const Color(0xFF0066CC).withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -56,7 +56,7 @@ class _BookingTrackingScreenState extends State<BookingTrackingScreen> {
                   'Ready for API integration',
                   style: TextStyle(
                     fontSize: 12,
-                    color: const Color(0xFF666666).withOpacity(0.6),
+                    color: const Color(0xFF666666).withValues(alpha: 0.6),
                   ),
                 ),
               ],
