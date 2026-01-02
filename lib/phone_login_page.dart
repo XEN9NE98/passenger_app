@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:passenger_app/home_screen.dart';
+import 'package:passenger_app/main_screen.dart';
 import 'package:passenger_app/registration_page.dart';
 import 'dart:async';
 
@@ -328,9 +328,9 @@ class _OTPScreenState extends State<OTPScreen> {
       if (!mounted) return;
 
       if (userDoc.exists) {
-        // User exists, go to home screen
+        // User exists, go to main screen
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => const MainScreen()),
           (route) => false,
         );
       } else {

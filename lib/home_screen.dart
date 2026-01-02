@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:passenger_app/phone_login_page.dart';
+import 'package:passenger_app/payment_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,56 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _logout(BuildContext context) async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Logout"),
-          content: const Text("Are you sure you want to logout?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
-              ),
-              child: const Text("Logout"),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (shouldLogout == true && context.mounted) {
-      await FirebaseAuth.instance.signOut();
-      
-      if (!context.mounted) return;
-      
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const PhoneLoginPage()),
-        (route) => false,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Melaka Water Taxi"),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _logout(context),
-            tooltip: "Logout",
-          )
-        ],
-      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,12 +257,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: ElevatedButton(
                       onPressed: (_selectedOrigin != null && _selectedDestination != null)
                           ? () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Booking from $_selectedOrigin to $_selectedDestination for $_passengerCount passenger(s)',
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PaymentScreen(
+                                    origin: _selectedOrigin!,
+                                    destination: _selectedDestination!,
+                                    passengerCount: _passengerCount,
                                   ),
-                                  backgroundColor: const Color(0xFF0066CC),
                                 ),
                               );
                             }
