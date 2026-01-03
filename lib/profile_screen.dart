@@ -161,6 +161,92 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _deleteAccount(BuildContext context) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Delete Account"),
+          content: const Text(
+            "This action cannot be undone. All your data will be permanently deleted. Are you sure?",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true || !context.mounted) return;
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception("User not authenticated");
+      }
+
+      // Delete user data from Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .delete();
+
+      // Delete user from Firebase Auth
+      await currentUser.delete();
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account deleted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Navigate to login page
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const PhoneLoginPage()),
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!context.mounted) return;
+      setState(() {
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message ?? 'Failed to delete account'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      setState(() {
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error deleting account: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -417,6 +503,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: Colors.red,
                         ),
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Delete Account Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: OutlinedButton(
+                      onPressed: _isSaving ? null : () => _deleteAccount(context),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red, width: 1.5),
+                      ),
+                      child: _isSaving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                              ),
+                            )
+                          : const Text(
+                              "Delete Account",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.red,
+                              ),
+                            ),
                     ),
                   ),
                 ],
