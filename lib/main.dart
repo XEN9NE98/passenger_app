@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'phone_login_page.dart';
+import 'main_screen.dart';
 
 void main() async {
   // CRITICAL: This line prevents the "Isolate" crash
@@ -69,8 +71,37 @@ class MyApp extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
-      // Set the PhoneLoginPage as the starting screen
-      home: const PhoneLoginPage(), 
+      // Check authentication state and route accordingly
+      home: const AuthWrapper(), 
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Show loading indicator while checking auth state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        
+        // If user is logged in, go to MainScreen
+        if (snapshot.hasData && snapshot.data != null) {
+          return const MainScreen();
+        }
+        
+        // If user is not logged in, show PhoneLoginPage
+        return const PhoneLoginPage();
+      },
     );
   }
 }
