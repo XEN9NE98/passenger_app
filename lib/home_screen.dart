@@ -50,238 +50,240 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Greeting Section
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF0066CC),
-                    const Color(0xFF0066CC).withValues(alpha: 0.8),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Greeting Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      const Color(0xFF0066CC),
+                      const Color(0xFF0066CC).withValues(alpha: 0.8),
+                    ],
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Hello, $_userName! 👋",
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Where would you like to go today?",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Hello, $_userName! 👋",
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "Where would you like to go today?",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
-            // Booking Form Section
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Origin Selection
-                  const Text(
-                    "Pick-up Location",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1A1A1A),
+              // Booking Form Section
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Origin Selection
+                    const Text(
+                      "Pick-up Location",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1A1A),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFDDE5F0), width: 1.5),
-                    ),
-                    child: DropdownButton<String>(
-                      isExpanded: true,
-                      value: _selectedOrigin,
-                      hint: const Text("Select pick-up jetty"),
-                      underline: const SizedBox(),
-                      items: _locations.map((location) {
-                        return DropdownMenuItem<String>(
-                          value: location['name'],
-                          child: Row(
-                            children: [
-                              const Icon(Icons.location_on, color: Color(0xFF0066CC), size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  location['name'],
-                                  style: const TextStyle(fontSize: 15),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedOrigin = value;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Destination Selection
-                  const Text(
-                    "Drop-off Location",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1A1A1A),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFDDE5F0), width: 1.5),
-                    ),
-                    child: DropdownButton<String>(
-                      isExpanded: true,
-                      value: _selectedDestination,
-                      hint: const Text("Select drop-off jetty"),
-                      underline: const SizedBox(),
-                      items: _locations.map((location) {
-                        return DropdownMenuItem<String>(
-                          value: location['name'],
-                          child: Row(
-                            children: [
-                              const Icon(Icons.flag, color: Color(0xFF0066CC), size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  location['name'],
-                                  style: const TextStyle(fontSize: 15),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedDestination = value;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Number of Passengers
-                  const Text(
-                    "Number of Passengers",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1A1A1A),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFDDE5F0), width: 1.5),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.people, color: Color(0xFF0066CC)),
-                            const SizedBox(width: 12),
-                            Text(
-                              '$_passengerCount ${_passengerCount == 1 ? 'Passenger' : 'Passengers'}',
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle_outline),
-                              color: _passengerCount > 1 ? const Color(0xFF0066CC) : Colors.grey,
-                              onPressed: _passengerCount > 1
-                                  ? () {
-                                      setState(() => _passengerCount--);
-                                    }
-                                  : null,
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add_circle_outline),
-                              color: _passengerCount < 10 ? const Color(0xFF0066CC) : Colors.grey,
-                              onPressed: _passengerCount < 10
-                                  ? () {
-                                      setState(() => _passengerCount++);
-                                    }
-                                  : null,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Book Now Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: (_selectedOrigin != null && _selectedDestination != null)
-                          ? () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PaymentScreen(
-                                    origin: _selectedOrigin!,
-                                    destination: _selectedDestination!,
-                                    passengerCount: _passengerCount,
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFDDE5F0), width: 1.5),
+                      ),
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: _selectedOrigin,
+                        hint: const Text("Select pick-up jetty"),
+                        underline: const SizedBox(),
+                        items: _locations.map((location) {
+                          return DropdownMenuItem<String>(
+                            value: location['name'],
+                            child: Row(
+                              children: [
+                                const Icon(Icons.location_on, color: Color(0xFF0066CC), size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    location['name'],
+                                    style: const TextStyle(fontSize: 15),
                                   ),
                                 ),
-                              );
-                            }
-                          : null,
-                      child: const Text(
-                        "Book Water Taxi",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedOrigin = value;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Destination Selection
+                    const Text(
+                      "Drop-off Location",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFDDE5F0), width: 1.5),
+                      ),
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: _selectedDestination,
+                        hint: const Text("Select drop-off jetty"),
+                        underline: const SizedBox(),
+                        items: _locations.map((location) {
+                          return DropdownMenuItem<String>(
+                            value: location['name'],
+                            child: Row(
+                              children: [
+                                const Icon(Icons.flag, color: Color(0xFF0066CC), size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    location['name'],
+                                    style: const TextStyle(fontSize: 15),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedDestination = value;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Number of Passengers
+                    const Text(
+                      "Number of Passengers",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFDDE5F0), width: 1.5),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.people, color: Color(0xFF0066CC)),
+                              const SizedBox(width: 12),
+                              Text(
+                                '$_passengerCount ${_passengerCount == 1 ? 'Passenger' : 'Passengers'}',
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle_outline),
+                                color: _passengerCount > 1 ? const Color(0xFF0066CC) : Colors.grey,
+                                onPressed: _passengerCount > 1
+                                    ? () {
+                                        setState(() => _passengerCount--);
+                                      }
+                                    : null,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add_circle_outline),
+                                color: _passengerCount < 10 ? const Color(0xFF0066CC) : Colors.grey,
+                                onPressed: _passengerCount < 10
+                                    ? () {
+                                        setState(() => _passengerCount++);
+                                      }
+                                    : null,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Book Now Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: (_selectedOrigin != null && _selectedDestination != null)
+                            ? () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PaymentScreen(
+                                      origin: _selectedOrigin!,
+                                      destination: _selectedDestination!,
+                                      passengerCount: _passengerCount,
+                                    ),
+                                  ),
+                                );
+                              }
+                            : null,
+                        child: const Text(
+                          "Book Water Taxi",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

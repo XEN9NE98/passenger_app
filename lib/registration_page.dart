@@ -17,21 +17,59 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final TextEditingController _emailController = TextEditingController();
   bool _isLoading = false;
 
+  bool _validateInputs(String name, String email) {
+    if (name.isEmpty) {
+      _showErrorSnackBar("Please enter your name");
+      return false;
+    }
+
+    if (name.length < 2) {
+      _showErrorSnackBar("Name must be at least 2 characters");
+      return false;
+    }
+
+    if (email.isEmpty) {
+      _showErrorSnackBar("Please enter your email address");
+      return false;
+    }
+
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(email)) {
+      _showErrorSnackBar("Please enter a valid email address");
+      return false;
+    }
+
+    return true;
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   Future<void> _completeRegistration() async {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
 
-    if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your name")),
-      );
-      return;
-    }
-
-    if (email.isEmpty || !RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter a valid email address")),
-      );
+    // Validate inputs
+    if (!_validateInputs(name, email)) {
       return;
     }
 
@@ -41,17 +79,33 @@ class _RegistrationPageState extends State<RegistrationPage> {
       // Get current user
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        throw Exception("User not authenticated");
+        throw Exception("User not authenticated. Please login again.");
+      }
+
+      // Verify phone number is not empty
+      if (widget.phoneNumber.isEmpty) {
+        throw Exception("Phone number is missing");
       }
 
       // Save user data to Firestore
-      await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).set({
-        'uid': currentUser.uid,
-        'phoneNumber': widget.phoneNumber,
-        'name': name,
-        'email': email,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).set(
+        {
+          'uid': currentUser.uid,
+          'phoneNumber': widget.phoneNumber,
+          'name': name,
+          'email': email,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      if (!mounted) return;
+
+      _showSuccessSnackBar("Registration completed successfully!");
+
+      // Small delay before navigation for better UX
+      await Future.delayed(const Duration(milliseconds: 500));
 
       if (!mounted) return;
 
@@ -60,12 +114,18 @@ class _RegistrationPageState extends State<RegistrationPage> {
         MaterialPageRoute(builder: (context) => const MainScreen()),
         (route) => false,
       );
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showErrorSnackBar("Firebase error: ${e.message ?? e.toString()}");
+    } on Exception catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showErrorSnackBar(e.toString().replaceFirst('Exception: ', ''));
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Registration failed: ${e.toString()}")),
-      );
+      _showErrorSnackBar("An unexpected error occurred: ${e.toString()}");
     }
   }
 
@@ -76,8 +136,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
         title: const Text("Complete Registration"),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -216,6 +277,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               const SizedBox(height: 40),
             ],
           ),
+        ),
         ),
       ),
     );

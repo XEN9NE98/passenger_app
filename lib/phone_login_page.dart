@@ -475,7 +475,7 @@ class _OTPScreenState extends State<OTPScreen> {
                   hintText: "- - - - - -",
                   hintStyle: const TextStyle(
                     fontSize: 36,
-                    letterSpacing: 12,
+                    letterSpacing: 8,
                     color: Color(0xFFDDE5F0),
                   ),
                 ),
