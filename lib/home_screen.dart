@@ -17,19 +17,15 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _selectedDestination;
   int _passengerCount = 1;
 
-  // Predefined locations in Melaka
-  final List<Map<String, dynamic>> _locations = [
-    {'name': 'Jetty 1 - Melaka River Cruise', 'lat': 2.1953, 'lng': 102.2494},
-    {'name': 'Jetty 2 - Taman Rempah', 'lat': 2.1989, 'lng': 102.2511},
-    {'name': 'Jetty 3 - Kampung Morten', 'lat': 2.2012, 'lng': 102.2534},
-    {'name': 'Jetty 4 - Banda Hilir', 'lat': 2.1876, 'lng': 102.2501},
-    {'name': 'Jetty 5 - Portuguese Settlement', 'lat': 2.1845, 'lng': 102.2589},
-  ];
+  List<Map<String, dynamic>> _locations = [];
+  bool _isLoadingLocations = true;
+  String? _locationError;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadLocations();
   }
 
   Future<void> _loadUserData() async {
@@ -43,6 +39,35 @@ class _HomeScreenState extends State<HomeScreen> {
       if (userDoc.exists && mounted) {
         setState(() {
           _userName = userDoc.data()?['name'] ?? 'Passenger';
+        });
+      }
+    }
+  }
+
+  Future<void> _loadLocations() async {
+    try {
+      final QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('jetties')
+          .orderBy('name')
+          .get();
+
+      if (mounted) {
+        setState(() {
+          _locations = snapshot.docs.map((doc) {
+            return {
+              'name': doc['name'] ?? '',
+              'lat': doc['lat'] ?? 0.0,
+              'lng': doc['lng'] ?? 0.0,
+            };
+          }).toList();
+          _isLoadingLocations = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _locationError = 'Failed to load jetties';
+          _isLoadingLocations = false;
         });
       }
     }
@@ -132,34 +157,51 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: const Color(0xFFDDE5F0), width: 1.5),
                       ),
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: _selectedOrigin,
-                        hint: const Text("Select pick-up jetty"),
-                        underline: const SizedBox(),
-                        items: _locations.map((location) {
-                          return DropdownMenuItem<String>(
-                            value: location['name'],
-                            child: Row(
-                              children: [
-                                const Icon(Icons.location_on, color: Color(0xFF0066CC), size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
+                      child: _isLoadingLocations
+                          ? const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : _locationError != null
+                              ? Padding(
+                                  padding: const EdgeInsets.all(16.0),
                                   child: Text(
-                                    location['name'],
-                                    style: const TextStyle(fontSize: 15),
+                                    _locationError!,
+                                    style: const TextStyle(color: Colors.red),
                                   ),
+                                )
+                              : DropdownButton<String>(
+                                  isExpanded: true,
+                                  value: _selectedOrigin,
+                                  hint: const Text("Select pick-up jetty"),
+                                  underline: const SizedBox(),
+                                  items: _locations.map((location) {
+                                    return DropdownMenuItem<String>(
+                                      value: location['name'],
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.location_on, color: Color(0xFF0066CC), size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              location['name'],
+                                              style: const TextStyle(fontSize: 15),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedOrigin = value;
+                                    });
+                                  },
                                 ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedOrigin = value;
-                          });
-                        },
-                      ),
                     ),
                     const SizedBox(height: 20),
 
@@ -180,34 +222,51 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: const Color(0xFFDDE5F0), width: 1.5),
                       ),
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: _selectedDestination,
-                        hint: const Text("Select drop-off jetty"),
-                        underline: const SizedBox(),
-                        items: _locations.map((location) {
-                          return DropdownMenuItem<String>(
-                            value: location['name'],
-                            child: Row(
-                              children: [
-                                const Icon(Icons.flag, color: Color(0xFF0066CC), size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
+                      child: _isLoadingLocations
+                          ? const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : _locationError != null
+                              ? Padding(
+                                  padding: const EdgeInsets.all(16.0),
                                   child: Text(
-                                    location['name'],
-                                    style: const TextStyle(fontSize: 15),
+                                    _locationError!,
+                                    style: const TextStyle(color: Colors.red),
                                   ),
+                                )
+                              : DropdownButton<String>(
+                                  isExpanded: true,
+                                  value: _selectedDestination,
+                                  hint: const Text("Select drop-off jetty"),
+                                  underline: const SizedBox(),
+                                  items: _locations.map((location) {
+                                    return DropdownMenuItem<String>(
+                                      value: location['name'],
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.flag, color: Color(0xFF0066CC), size: 20),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              location['name'],
+                                              style: const TextStyle(fontSize: 15),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedDestination = value;
+                                    });
+                                  },
                                 ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedDestination = value;
-                          });
-                        },
-                      ),
                     ),
                     const SizedBox(height: 20),
 

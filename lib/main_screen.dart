@@ -32,11 +32,13 @@ class _MainScreenState extends State<MainScreen> {
         onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person_outlined),
+            activeIcon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],
