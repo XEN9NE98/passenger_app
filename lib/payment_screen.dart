@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:passenger_app/booking_tracking_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String origin;
   final String destination;
-  final int passengerCount;
+  final int adultCount;
+  final int childCount;
 
   const PaymentScreen({
     super.key,
     required this.origin,
     required this.destination,
-    required this.passengerCount,
+    required this.adultCount,
+    required this.childCount,
   });
 
   @override
@@ -20,14 +23,64 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   bool _isProcessing = false;
   String? _selectedPaymentMethod;
+  bool _isLoadingFare = true;
+  String? _fareError;
+  Map<String, double>? _fareDetails;
 
-  // Dummy pricing calculation
-  double _calculateFare() {
-    // Base fare: RM 5.00
-    double baseFare = 5.0;
-    // Per passenger: RM 3.00
-    double perPassenger = 3.0 * widget.passengerCount;
-    return baseFare + perPassenger;
+  @override
+  void initState() {
+    super.initState();
+    _loadFare();
+  }
+
+  // Load fare from Firestore
+  Future<void> _loadFare() async {
+    try {
+      final QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('fares')
+          .where('origin', isEqualTo: widget.origin)
+          .where('destination', isEqualTo: widget.destination)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _fareError = 'Fare not found for this route';
+            _isLoadingFare = false;
+          });
+        }
+        return;
+      }
+
+      final fareDoc = snapshot.docs.first;
+      double adultFarePerPerson = (fareDoc['adultFare'] ?? 0.0).toDouble();
+      double childFarePerPerson = (fareDoc['childFare'] ?? 0.0).toDouble();
+
+      double adultTotal = adultFarePerPerson * widget.adultCount;
+      double childTotal = childFarePerPerson * widget.childCount;
+      double total = adultTotal + childTotal;
+
+      if (mounted) {
+        setState(() {
+          _fareDetails = {
+            'adultPerPerson': adultFarePerPerson,
+            'childPerPerson': childFarePerPerson,
+            'adultTotal': adultTotal,
+            'childTotal': childTotal,
+            'total': total,
+          };
+          _isLoadingFare = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _fareError = 'Failed to load fare information';
+          _isLoadingFare = false;
+        });
+      }
+    }
   }
 
   Future<void> _processPayment() async {
@@ -60,7 +113,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         builder: (context) => BookingTrackingScreen(
           origin: widget.origin,
           destination: widget.destination,
-          passengerCount: widget.passengerCount,
+          passengerCount: widget.adultCount + widget.childCount,
         ),
       ),
       (route) => route.isFirst,
@@ -69,14 +122,42 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double totalFare = _calculateFare();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Payment"),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
+      body: _isLoadingFare
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading fare information...'),
+                ],
+              ),
+            )
+          : _fareError != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(
+                        _fareError!,
+                        style: const TextStyle(fontSize: 16, color: Colors.red),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Go Back'),
+                      ),
+                    ],
+                  ),
+                )
+              : SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -199,7 +280,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             ),
                           ),
                           Text(
-                            "${widget.passengerCount} ${widget.passengerCount == 1 ? 'Passenger' : 'Passengers'}",
+                            "${widget.adultCount} Adult${widget.adultCount > 1 ? 's' : ''}, ${widget.childCount} Child${widget.childCount != 1 ? 'ren' : ''}",
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -241,49 +322,98 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     ),
                     child: Column(
                       children: [
-                        // Base Fare
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              "Base Fare",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF666666),
+                        // Adult Fare
+                        if (widget.adultCount > 0) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Adult Fare (x${widget.adultCount})",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF666666),
+                                ),
                               ),
-                            ),
-                            Text(
-                              "RM 5.00",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1A1A1A),
+                              Text(
+                                "RM ${_fareDetails!['adultPerPerson']!.toStringAsFixed(2)} × ${widget.adultCount}",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF666666),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        // Per Passenger
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Per Passenger (x${widget.passengerCount})",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF666666),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Adult Subtotal",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF1A1A1A),
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                            ),
-                            Text(
-                              "RM ${(3.0 * widget.passengerCount).toStringAsFixed(2)}",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1A1A1A),
+                              Text(
+                                "RM ${_fareDetails!['adultTotal']!.toStringAsFixed(2)}",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1A1A1A),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
+                        if (widget.adultCount > 0 && widget.childCount > 0)
+                          const SizedBox(height: 12),
+                        // Child Fare
+                        if (widget.childCount > 0) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Child Fare (x${widget.childCount})",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF666666),
+                                ),
+                              ),
+                              Text(
+                                "RM ${_fareDetails!['childPerPerson']!.toStringAsFixed(2)} × ${widget.childCount}",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF666666),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Child Subtotal",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF1A1A1A),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                "RM ${_fareDetails!['childTotal']!.toStringAsFixed(2)}",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         const Divider(color: Color(0xFFDDE5F0), height: 1),
                         const SizedBox(height: 12),
@@ -300,7 +430,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               ),
                             ),
                             Text(
-                              "RM ${totalFare.toStringAsFixed(2)}",
+                              "RM ${_fareDetails!['total']!.toStringAsFixed(2)}",
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -332,7 +462,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   const SizedBox(height: 12),
                   _buildPaymentMethodOption(
                     "e_wallet",
-                    "E-Wallet (Touch 'n Go / GCash)",
+                    "E-Wallet",
                     Icons.account_balance_wallet,
                   ),
                   const SizedBox(height: 12),
@@ -340,12 +470,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     "online_banking",
                     "Online Banking",
                     Icons.account_balance,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildPaymentMethodOption(
-                    "cash",
-                    "Pay with Cash",
-                    Icons.money,
                   ),
                   const SizedBox(height: 32),
 
@@ -366,7 +490,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               ),
                             )
                           : Text(
-                              "Pay RM ${totalFare.toStringAsFixed(2)}",
+                              "Pay RM ${_fareDetails!['total']!.toStringAsFixed(2)}",
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,

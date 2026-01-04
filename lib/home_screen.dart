@@ -15,7 +15,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String _userName = 'Passenger';
   String? _selectedOrigin;
   String? _selectedDestination;
-  int _passengerCount = 1;
+  int _adultCount = 1;
+  int _childCount = 0;
 
   List<Map<String, dynamic>> _locations = [];
   bool _isLoadingLocations = true;
@@ -48,18 +49,26 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('jetties')
-          .orderBy('name')
+          .orderBy('jettyId')
           .get();
 
       if (mounted) {
         setState(() {
           _locations = snapshot.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>?;
             return {
-              'name': doc['name'] ?? '',
-              'lat': doc['lat'] ?? 0.0,
-              'lng': doc['lng'] ?? 0.0,
+              'name': (data?['name'] ?? '').toString(),
+              'jettyId': data?['jettyId']?.toString() ?? '',
+              'lat': (data?['lat'] ?? 0.0) as num,
+              'lng': (data?['lng'] ?? 0.0) as num,
             };
-          }).toList();
+          }).toList()
+            ..sort((a, b) {
+              final ai = double.tryParse((a['jettyId'] ?? '').toString()) ?? double.infinity;
+              final bi = double.tryParse((b['jettyId'] ?? '').toString()) ?? double.infinity;
+              if (ai != bi) return ai.compareTo(bi);
+              return (a['name'] as String).compareTo(b['name'] as String);
+            });
           _isLoadingLocations = false;
         });
       }
@@ -188,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
-                                              location['name'],
+                                              'Jetty ${location['jettyId']} - ${location['name']}',
                                               style: const TextStyle(fontSize: 15),
                                             ),
                                           ),
@@ -253,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
-                                              location['name'],
+                                              'Jetty ${location['jettyId']} - ${location['name']}',
                                               style: const TextStyle(fontSize: 15),
                                             ),
                                           ),
@@ -280,6 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
+                    // Adults
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
@@ -292,11 +302,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.people, color: Color(0xFF0066CC)),
+                              const Icon(Icons.person, color: Color(0xFF0066CC)),
                               const SizedBox(width: 12),
-                              Text(
-                                '$_passengerCount ${_passengerCount == 1 ? 'Passenger' : 'Passengers'}',
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Adults',
+                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    'Age 13 and above',
+                                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -304,19 +323,83 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               IconButton(
                                 icon: const Icon(Icons.remove_circle_outline),
-                                color: _passengerCount > 1 ? const Color(0xFF0066CC) : Colors.grey,
-                                onPressed: _passengerCount > 1
+                                color: _adultCount > 1 ? const Color(0xFF0066CC) : Colors.grey,
+                                onPressed: _adultCount > 1
                                     ? () {
-                                        setState(() => _passengerCount--);
+                                        setState(() => _adultCount--);
                                       }
                                     : null,
                               ),
+                              Text(
+                                '$_adultCount',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
                               IconButton(
                                 icon: const Icon(Icons.add_circle_outline),
-                                color: _passengerCount < 10 ? const Color(0xFF0066CC) : Colors.grey,
-                                onPressed: _passengerCount < 10
+                                color: _adultCount < 10 ? const Color(0xFF0066CC) : Colors.grey,
+                                onPressed: _adultCount < 10
                                     ? () {
-                                        setState(() => _passengerCount++);
+                                        setState(() => _adultCount++);
+                                      }
+                                    : null,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Children
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFDDE5F0), width: 1.5),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.child_care, color: Color(0xFF0066CC)),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Children',
+                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    'Age 12 and under',
+                                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle_outline),
+                                color: _childCount > 0 ? const Color(0xFF0066CC) : Colors.grey,
+                                onPressed: _childCount > 0
+                                    ? () {
+                                        setState(() => _childCount--);
+                                      }
+                                    : null,
+                              ),
+                              Text(
+                                '$_childCount',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add_circle_outline),
+                                color: _childCount < 10 ? const Color(0xFF0066CC) : Colors.grey,
+                                onPressed: _childCount < 10
+                                    ? () {
+                                        setState(() => _childCount++);
                                       }
                                     : null,
                               ),
@@ -332,7 +415,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: (_selectedOrigin != null && _selectedDestination != null)
+                        onPressed: (_selectedOrigin != null && _selectedDestination != null && (_adultCount > 0 || _childCount > 0))
                             ? () {
                                 Navigator.push(
                                   context,
@@ -340,7 +423,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     builder: (context) => PaymentScreen(
                                       origin: _selectedOrigin!,
                                       destination: _selectedDestination!,
-                                      passengerCount: _passengerCount,
+                                      adultCount: _adultCount,
+                                      childCount: _childCount,
                                     ),
                                   ),
                                 );
