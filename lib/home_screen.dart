@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:passenger_app/payment_screen.dart';
+import 'package:passenger_app/jetty_location_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -56,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _locations = snapshot.docs.map((doc) {
             final data = doc.data() as Map<String, dynamic>?;
-            return {
+            return <String, dynamic>{
               'name': (data?['name'] ?? '').toString(),
               'jettyId': data?['jettyId']?.toString() ?? '',
               'lat': (data?['lat'] ?? 0.0) as num,
@@ -205,10 +206,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     );
                                   }).toList(),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedOrigin = value;
-                                    });
+                                  onChanged: (value) async {
+                                    if (value != null) {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => JettyLocationScreen(
+                                            initialJettyName: value,
+                                            allJetties: _locations,
+                                            isPickup: true,
+                                          ),
+                                        ),
+                                      );
+                                      if (result != null && mounted) {
+                                        setState(() {
+                                          _selectedOrigin = result;
+                                        });
+                                      }
+                                    }
                                   },
                                 ),
                     ),
@@ -270,10 +285,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     );
                                   }).toList(),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedDestination = value;
-                                    });
+                                  onChanged: (value) async {
+                                    if (value != null) {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => JettyLocationScreen(
+                                            initialJettyName: value,
+                                            allJetties: _locations,
+                                            isPickup: false,
+                                          ),
+                                        ),
+                                      );
+                                      if (result != null && mounted) {
+                                        setState(() {
+                                          _selectedDestination = result;
+                                        });
+                                      }
+                                    }
                                   },
                                 ),
                     ),
