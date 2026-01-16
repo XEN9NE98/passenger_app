@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
 class JettyLocationScreen extends StatefulWidget {
   final String initialJettyName;
@@ -22,12 +23,36 @@ class _JettyLocationScreenState extends State<JettyLocationScreen> {
   late Map<String, dynamic> _currentJetty;
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
+  bool _isLocationGranted = false;
 
   @override
   void initState() {
     super.initState();
     _selectedJettyName = widget.initialJettyName;
     _updateCurrentJetty();
+    _checkPermission();
+  }
+
+  Future<void> _checkPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+    
+    if (permission == LocationPermission.deniedForever) return;
+
+    if (mounted) {
+      setState(() {
+        _isLocationGranted = true;
+      });
+    }
   }
 
   void _updateCurrentJetty() {
@@ -89,10 +114,28 @@ class _JettyLocationScreenState extends State<JettyLocationScreen> {
             onMapCreated: (controller) {
               _mapController = controller;
             },
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
+            myLocationEnabled: _isLocationGranted,
+            myLocationButtonEnabled: false, // Hide default button, we use custom
             zoomControlsEnabled: false,
             mapToolbarEnabled: false,
+          ),
+          Positioned(
+            right: 16,
+            bottom: 220, // Positioned above the card
+            child: FloatingActionButton(
+              mini: true,
+              backgroundColor: Colors.white,
+              child: const Icon(Icons.my_location, color: Color(0xFF0066CC)),
+              onPressed: () async {
+                final position = await Geolocator.getCurrentPosition();
+                _mapController?.animateCamera(
+                  CameraUpdate.newLatLngZoom(
+                    LatLng(position.latitude, position.longitude),
+                    18,
+                  ),
+                );
+              },
+            ),
           ),
           Positioned(
             left: 16,
